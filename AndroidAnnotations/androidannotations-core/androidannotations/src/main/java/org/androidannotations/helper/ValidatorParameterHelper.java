@@ -135,6 +135,10 @@ public class ValidatorParameterHelper {
 			return param(new PrimitiveOrWrapperParameterRequirement(primitive));
 		}
 
+		public V anyOfPrimitiveOrWrapper(TypeKind... primitives) {
+			return param(new AnyOfPrimitiveOrWrapperParameterRequirement(primitives));
+		}
+
 		public V anyOfTypes(String... types) {
 			return param(new AnyOfTypesParameterRequirement(types));
 		}
@@ -461,6 +465,61 @@ public class ValidatorParameterHelper {
 				return CanonicalNameConstants.DOUBLE;
 			default:
 				throw new IllegalArgumentException("The TypeKind passed does not represent a primitive");
+			}
+		}
+	}
+
+	public class AnyOfPrimitiveOrWrapperParameterRequirement extends BaseParameterRequirement {
+
+		private List<TypeKind> types;
+
+		public AnyOfPrimitiveOrWrapperParameterRequirement(TypeKind... types ) {
+			this.types = Arrays.asList(types);
+		}
+
+		@Override
+		protected String description() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("Any of the primitives: [");
+			for (int i = 0; i < types.size() - 1; ++i) {
+				builder.append(getWrapperType(types.get(i))).append(", ");
+			}
+			builder.append(getWrapperType(types.get(types.size() - 1))).append(" ]");
+
+			return builder.toString();
+		}
+
+		@Override
+		public boolean isSatisfied(VariableElement parameter) {
+			TypeMirror elementType = parameter.asType();
+
+			for ( TypeKind type: types ) {
+				if ( elementType.getKind() == type || elementType.toString().equals( getWrapperType(type) ) )
+				return true;
+			}
+			return false;
+		}
+
+		private String getWrapperType(TypeKind type) {
+			switch ( type ) {
+				case BOOLEAN:
+					return CanonicalNameConstants.BOOLEAN;
+				case INT:
+					return CanonicalNameConstants.INTEGER;
+				case BYTE:
+					return CanonicalNameConstants.BYTE;
+				case SHORT:
+					return CanonicalNameConstants.SHORT;
+				case LONG:
+					return CanonicalNameConstants.LONG;
+				case CHAR:
+					return CanonicalNameConstants.CHAR;
+				case FLOAT:
+					return CanonicalNameConstants.FLOAT;
+				case DOUBLE:
+					return CanonicalNameConstants.DOUBLE;
+				default:
+					throw new IllegalArgumentException("The TypeKind passed does not represent a primitive");
 			}
 		}
 	}
